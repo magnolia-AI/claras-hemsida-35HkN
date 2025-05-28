@@ -22,6 +22,12 @@ export default function RootLayout({
       <body className="h-full flex flex-col antialiased">
         <ThemeProvider defaultTheme="light" attribute="class">
           <ConfettiButton />
+          {/* Hello text in top right corner */}
+          <div className="fixed top-4 right-16 z-50">
+            <span className="text-white text-lg font-medium drop-shadow-lg">
+              hello
+            </span>
+          </div>
           <main className="flex-1">
             {children}
           </main>
@@ -31,5 +37,7 @@ export default function RootLayout({
     </html>
   )
 }
+
+
 
 
