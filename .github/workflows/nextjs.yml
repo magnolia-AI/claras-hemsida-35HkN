@@ -1,0 +1,52 @@
+
+# Workflow Version: 2.2.0
+name: Deploy to Cloudflare Workers
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  # Use project-specific worker name from secrets for security
+  WORKER_NAME: ${{ secrets.MAGNOLIA_WORKER_NAME }}
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install
+
+      - name: Validate worker name
+        run: |
+          if [ -z "$WORKER_NAME" ]; then
+            echo "❌ Error: MAGNOLIA_WORKER_NAME secret is not set"
+            echo "This secret should contain the unique worker name for this project"
+            exit 1
+          fi
+          echo "✅ Worker name is configured (length: ${#WORKER_NAME})"
+
+      # Build and deploy using opennextjs-cloudflare with the worker name override
+      - name: Deploy to Cloudflare Workers
+        run: |
+          echo "🚀 Building and deploying with worker name override..."
+          # We use the opennextjs-cloudflare deploy command with wrangler arguments 
+          bunx opennextjs-cloudflare build
+          bunx opennextjs-cloudflare deploy -- --name="$WORKER_NAME"
+
+      - name: Output deployment URL
+        run: |
+          echo "🚀 Deployed to: https://$WORKER_NAME.magnusson27.workers.dev"
+          echo "deployment-url=https://$WORKER_NAME.magnusson27.workers.dev" >> $GITHUB_OUTPUT
